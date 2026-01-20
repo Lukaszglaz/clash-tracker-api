@@ -6,7 +6,7 @@ export class RegisterDto {
   @IsEmail({}, { message: 'Niepoprawny format email' })
   email: string;
 
-  @ApiProperty({ example: 'password123' })
+  @ApiProperty({ example: 'userpassword' })
   @IsString()
   @MinLength(8, { message: 'Hasło musi mieć minimum 8 znaków' })
   password: string;
