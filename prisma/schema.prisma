@@ -13,12 +13,20 @@ generator client {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  name      String?
-  players   Player[]
-  createdAt DateTime @default(now())
+  id                  Int       @id @default(autoincrement())
+  email               String    @unique
+  password            String
+  name                String?
+  playerTag              String?
+  isVerified          Boolean   @default(false)
+  verificationCode    String?
+  verificationExpires DateTime?
+  verificationCodeUsedAt DateTime?
+  resetToken          String?   @unique
+  resetTokenExpires   DateTime?
+  players             Player[]
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt 
 }
 
 model Player {
@@ -30,4 +38,12 @@ model Player {
   name            String
   townHallLevel   Int
   updatedAt       DateTime @updatedAt
+}
+
+model PlayerHistory {
+  id        Int      @id @default(autoincrement())
+  playerTag String
+  trophies  Int
+  expLevel  Int
+  date      DateTime @default(now())
 }
