@@ -1,5 +1,10 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+  BadRequestException,
+} from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -9,6 +14,53 @@ export class ClashService {
     private readonly httpService: HttpService,
     private readonly prisma: PrismaService,
   ) {}
+
+  async getVillageDataByUserId(userId: number) {
+    return this.getPlayerByUserId(userId);
+  }
+
+  async getPlayerByUserId(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user || !user.playerTag) {
+      throw new NotFoundException(
+        'Użytkownik nie ma przypisanego tagu gracza.',
+      );
+    }
+
+    return this.getPlayer(user.playerTag);
+  }
+
+  async getClanDataByUserId(userId: number) {
+    const player = await this.getPlayerByUserId(userId);
+
+    const rawData = player.rawDetails as any;
+    if (!rawData.clan || !rawData.clan.tag) {
+      throw new BadRequestException('Gracz nie należy do żadnego klanu.');
+    }
+
+    const clanTag = rawData.clan.tag;
+    const formattedTag = clanTag.replace('#', '%23');
+    const url = `${process.env.COC_BASE_URL}/clans/${formattedTag}`;
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(url, {
+          headers: {
+            Authorization: `Bearer ${process.env.COC_API_KEY}`,
+            Accept: 'application/json',
+          },
+        }),
+      );
+      return response.data;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Nie udało się pobrać danych klanu.',
+      );
+    }
+  }
 
   async getPlayer(tag: string) {
     const baseUrl = process.env.COC_BASE_URL;
@@ -21,24 +73,24 @@ export class ClashService {
     try {
       const response = await firstValueFrom(
         this.httpService.get(url, {
-          headers: { Authorization: `Bearer ${apiKey}` },
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            Accept: 'application/json',
+          },
         }),
       );
 
       const data = response.data;
 
-      console.log('DOSTĘPNE TABLICE:', Object.keys(data));
-      console.log('PEŁNY JSON:', JSON.stringify(data, null, 2));
-
       return await this.prisma.player.upsert({
-        where: { tag: data.tag },
+        where: { tag: cleanTag },
         update: {
           name: data.name,
           townHallLevel: data.townHallLevel,
           rawDetails: data,
         },
         create: {
-          tag: data.tag,
+          tag: cleanTag,
           name: data.name,
           townHallLevel: data.townHallLevel,
           rawDetails: data,
@@ -49,9 +101,11 @@ export class ClashService {
         where: { tag: cleanTag },
       });
 
-      if (cachedPlayer) return cachedPlayer;
+      if (cachedPlayer) return { ...cachedPlayer, _source: 'cache' };
 
-      throw new Error(`Nie znaleziono gracza o tagu ${tag}`);
+      throw new InternalServerErrorException(
+        `Błąd API CoC dla tagu ${cleanTag}`,
+      );
     }
   }
 }
