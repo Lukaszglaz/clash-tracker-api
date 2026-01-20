@@ -17,16 +17,17 @@ model User {
   email     String   @unique
   password  String
   name      String?
-  players   Player[] // Relacja: użytkownik może mieć wielu przypisanych graczy
+  players   Player[]
   createdAt DateTime @default(now())
 }
 
 model Player {
-  id        Int      @id @default(autoincrement())
-  tag       String   @unique
-  name      String
-  townHall  Int
-  userId    Int?     // Klucz obcy do tabeli User
-  user      User?    @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
+  id              Int      @id @default(autoincrement())
+  userId          Int?     
+  user            User?    @relation(fields: [userId], references: [id])
+  rawDetails      Json?
+  tag             String   @unique
+  name            String
+  townHallLevel   Int
+  updatedAt       DateTime @updatedAt
 }
