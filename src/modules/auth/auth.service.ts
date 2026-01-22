@@ -9,7 +9,7 @@ import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dto/register.dto';
 import { JwtService } from '@nestjs/jwt';
-import { MailService } from '../mail/mail.service'; // Importuj swój serwis
+import { MailService } from '../mail/mail.service';
 import { randomInt } from 'crypto';
 
 @Injectable()
@@ -17,7 +17,7 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-    private mailService: MailService, // Wstrzyknij MailService
+    private mailService: MailService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -73,7 +73,6 @@ export class AuthService {
     return { message: 'Konto zostało pomyślnie zweryfikowane.' };
   }
 
-  // LOGOWANIE
   async login(email: string, pass: string) {
     const user = await this.usersService.findByEmail(email);
 

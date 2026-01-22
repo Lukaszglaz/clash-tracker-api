@@ -9,7 +9,6 @@ export class MailService {
   private readonly bgColor = '#0F0F12';
   private readonly cardColor = '#16161D';
 
-  // Wspólny szablon dla maili
   private getHtmlWrapper(content: string) {
     return `
       <div style="background-color: ${this.bgColor}; padding: 40px 20px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #FFFFFF; text-align: center;">
