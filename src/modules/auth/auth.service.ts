@@ -11,6 +11,7 @@ import { RegisterDto } from './dto/register.dto';
 import { JwtService } from '@nestjs/jwt';
 import { randomInt } from 'crypto';
 import { MailService } from '../mail/mail.service';
+import { first } from 'rxjs';
 
 @Injectable()
 export class AuthService {
@@ -46,7 +47,11 @@ export class AuthService {
     const user = await this.usersService.create({
       email: dto.email,
       password: hashedPassword,
+      firstName: dto.firstName,
+      lastName: dto.lastName,
       playerTag: dto.playerTag,
+      termsAccepted: dto.termsAccepted,
+      marketingConsent: dto.marketingConsent,
       verificationCode: code,
       verificationExpires: expiry,
       isVerified: false,
@@ -61,6 +66,8 @@ export class AuthService {
         email: user.email,
         playerTag: user.playerTag,
         isVerified: user.isVerified,
+        firstName: user.firstName,
+        lastName: user.lastName,
       },
     };
   }
