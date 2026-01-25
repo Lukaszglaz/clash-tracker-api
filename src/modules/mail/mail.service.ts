@@ -55,14 +55,30 @@ export class MailService {
 
   async sendVerificationCode(email: string, code: string) {
     const html = this.getHtmlWrapper(`
-      <h2 style="margin-top: 0; font-size: 22px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: #FFFFFF;">Weryfikacja Konta</h2>
-      <p style="color: #A0A0AB; font-size: 15px; line-height: 1.7;">
-        Witaj. Twoje konto w serwisie <strong>ClashTracker</strong> wymaga potwierdzenia. Aby dokończyć proces rejestracji i uzyskać dostęp do statystyk, wprowadź poniższy kod na stronie:
-      </p>
-      <div style="background: rgba(188, 71, 251, 0.08); border: 2px dashed ${this.brandColor}; border-radius: 16px; padding: 30px; margin: 35px 0;">
-        <span style="font-size: 42px; font-weight: 900; letter-spacing: 12px; color: ${this.brandColor}; text-shadow: 0 0 20px rgba(188,71,251,0.3);">${code}</span>
-      </div>
-      <p style="font-size: 12px; color: #666; font-style: italic;">Ten kod jednorazowy wygaśnie automatycznie po upływie 24 godzin.</p>
+     <h2 style="margin-top: 0; font-size: 22px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: #FFFFFF;">
+  Aktywacja <span style="color: ${this.brandColor};">Statystyk</span>
+</h2>
+
+<p style="color: #A0A0AB; font-size: 15px; line-height: 1.7;">
+  Witaj! Aby dokończyć proces rejestracji konta i uzyskać pełny dostęp do statystyk gracza, 
+  <strong>zaloguj się na swoje konto</strong>. Po zalogowaniu wyświetlą się informacje o aktywacji 
+  – wpisz tam poniższy kod weryfikacyjny:
+</p>
+
+<div style="background: rgba(188, 71, 251, 0.08); border: 2px dashed ${this.brandColor}; border-radius: 16px; padding: 30px; margin: 35px 0; text-align: center;">
+  <span style="font-size: 42px; font-weight: 900; letter-spacing: 12px; color: ${this.brandColor}; text-shadow: 0 0 20px rgba(188,71,251,0.3);">
+    ${code}
+  </span>
+</div>
+
+<p style="color: #A0A0AB; font-size: 14px; line-height: 1.6;">
+  Po wpisaniu kodu na stronie po zalogowaniu, Twój profil zostanie w pełni aktywowany, 
+  a statystyki zaczną się odświeżać automatycznie.
+</p>
+
+<p style="font-size: 12px; color: #666; font-style: italic; margin-top: 20px;">
+  Ten kod jednorazowy wygaśnie automatycznie po upływie 24 godzin.
+</p>
     `);
 
     await this.mailerService.sendMail({
