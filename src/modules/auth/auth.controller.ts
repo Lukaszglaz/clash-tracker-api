@@ -6,12 +6,7 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiBearerAuth,
-  ApiResponse,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
@@ -56,12 +51,14 @@ export class AuthController {
 
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
-  @Get('profile')
-  @ApiOperation({ summary: 'Pobranie danych zalogowanego użytkownika' })
-  getProfile(@Request() req) {
+  @Get('me')
+  @ApiOperation({ summary: 'Pobranie danych sesji zalogowanego użytkownika' })
+  async getMe(@Request() req) {
+    const user = await this.authService.findUserByEmail(req.user.email);
     return {
-      message: 'To jest chroniona informacja!',
-      userData: req.user,
+      email: user.email,
+      playerTag: user.playerTag,
+      isVerified: user.isVerified,
     };
   }
 }

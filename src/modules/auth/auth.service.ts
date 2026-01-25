@@ -9,8 +9,8 @@ import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dto/register.dto';
 import { JwtService } from '@nestjs/jwt';
-import { MailService } from '../mail/mail.service';
 import { randomInt } from 'crypto';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -19,6 +19,14 @@ export class AuthService {
     private jwtService: JwtService,
     private mailService: MailService,
   ) {}
+
+  async findUserByEmail(email: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      throw new NotFoundException('Użytkownik nie istnieje');
+    }
+    return user;
+  }
 
   async register(dto: RegisterDto) {
     const existingUser = await this.usersService.findByEmail(dto.email);
@@ -46,8 +54,14 @@ export class AuthService {
 
     await this.mailService.sendVerificationCode(user.email, code);
 
+    const payload = { sub: user.id, email: user.email };
     return {
-      message: 'Zarejestrowano pomyślnie. Sprawdź email w celu weryfikacji.',
+      access_token: await this.jwtService.signAsync(payload),
+      user: {
+        email: user.email,
+        playerTag: user.playerTag,
+        isVerified: user.isVerified,
+      },
     };
   }
 
@@ -62,7 +76,7 @@ export class AuthService {
       throw new BadRequestException('Kod weryfikacyjny wygasł');
     }
 
-    const updatedUser = await this.usersService.update(user.id, {
+    await this.usersService.update(user.id, {
       isVerified: true,
       verificationCode: null,
       verificationExpires: null,
@@ -70,7 +84,10 @@ export class AuthService {
 
     await this.mailService.sendWelcomeMessage(email);
 
-    return { message: 'Konto zostało pomyślnie zweryfikowane.' };
+    return {
+      message: 'Konto zostało pomyślnie zweryfikowane.',
+      isVerified: true,
+    };
   }
 
   async login(email: string, pass: string) {
@@ -85,13 +102,14 @@ export class AuthService {
       throw new UnauthorizedException('Niepoprawne dane logowania');
     }
 
-    if (!user.isVerified) {
-      throw new UnauthorizedException('Konto nie jest zweryfikowane');
-    }
-
     const payload = { sub: user.id, email: user.email };
     return {
       access_token: await this.jwtService.signAsync(payload),
+      user: {
+        email: user.email,
+        playerTag: user.playerTag,
+        isVerified: user.isVerified,
+      },
     };
   }
 
@@ -117,7 +135,7 @@ export class AuthService {
     if (
       !user ||
       user.resetToken !== code ||
-      user.resetTokenExpires < new Date()
+      (user.resetTokenExpires && user.resetTokenExpires < new Date())
     ) {
       throw new BadRequestException('Kod jest nieprawidłowy lub wygasł.');
     }
